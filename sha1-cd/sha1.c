@@ -11,11 +11,12 @@ void sha1_cd_init(SHA1_CTX *ctx) {
 void sha1_cd_update(SHA1_CTX *ctx, const void *data_in, unsigned long len) {
     while (len > 0) {
         unsigned long n = len;
-        if (len > UINT_MAX) {
+        if (n > UINT_MAX) {
             n = UINT_MAX;
         }
         SHA1DCUpdate(ctx, (const char *) data_in, (unsigned) n);
         len -= n;
+        data_in += n;
     }
 }
 
