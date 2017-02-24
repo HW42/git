@@ -18,10 +18,10 @@ tmp=
 trap 'rm -rf "$tmp"' EXIT
 tmp="$(mktemp -d)"
 
-name="git-$ref"
+top_prefix="git-$ref"
 
-git archive --format=tar "$ref" --prefix="$name/" | tar -C "$tmp" -x
-export tmp name
-git submodule foreach --quiet --recursive 'git archive --format=tar --prefix="$name/$path/" "$sha1" | tar -C "$tmp" -x'
+git archive --format=tar "$ref" --prefix="$top_prefix/" | tar -C "$tmp" -x
+export tmp top_prefix
+git submodule foreach --quiet --recursive 'git archive --format=tar --prefix="$top_prefix/$path/" "$sha1" | tar -C "$tmp" -x'
 
-tar -C "$tmp" --numeric-owner --sort=name --owner=0 --group=0 --mode=u=rwX,go=rX --mtime=\@0 --no-acls --no-xattrs -c $name
+tar -C "$tmp" --numeric-owner --sort=name --owner=0 --group=0 --mode=u=rwX,go=rX --mtime=\@0 --no-acls --no-xattrs -c "$top_prefix"
