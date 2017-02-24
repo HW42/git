@@ -1383,23 +1383,10 @@ ifdef APPLE_COMMON_CRYPTO
 	SHA1_MAX_BLOCK_SIZE = 1024L*1024L*1024L
 endif
 
-ifdef BLK_SHA1
-	SHA1_HEADER = "block-sha1/sha1.h"
-	LIB_OBJS += block-sha1/sha1.o
-else
-ifdef PPC_SHA1
-	SHA1_HEADER = "ppc/sha1.h"
-	LIB_OBJS += ppc/sha1.o ppc/sha1ppc.o
-else
-ifdef APPLE_COMMON_CRYPTO
-	COMPAT_CFLAGS += -DCOMMON_DIGEST_FOR_OPENSSL
-	SHA1_HEADER = <CommonCrypto/CommonDigest.h>
-else
-	SHA1_HEADER = <openssl/sha.h>
-	EXTLIBS += $(LIB_4_CRYPTO)
-endif
-endif
-endif
+# Always use our SHA1 implementation with collision attack detection.
+# (ignore other settings)
+SHA1_HEADER = "sha1-cd/sha1.h"
+LIB_OBJS += sha1-cd/sha1.o
 
 ifdef SHA1_MAX_BLOCK_SIZE
 	LIB_OBJS += compat/sha1-chunked.o
@@ -2079,7 +2066,10 @@ $(REMOTE_CURL_PRIMARY): remote-curl.o http.o http-walker.o GIT-LDFLAGS $(GITLIBS
 		$(CURL_LIBCURL) $(EXPAT_LIBEXPAT) $(LIBS)
 
 $(LIB_FILE): $(LIB_OBJS)
-	$(QUIET_AR)$(RM) $@ && $(AR) $(ARFLAGS) $@ $^
+	# this is very hacky, but when integrating the collision detection lib
+	# properly you would do it differently anyway ;]
+	$(QUIET_SUBDIR0)sha1-cd/sha1collisiondetection $(QUIET_SUBDIR1) library
+	$(QUIET_AR)$(RM) $@ && $(AR) $(ARFLAGS) $@ $^ sha1-cd/sha1collisiondetection/obj_lib/*.o
 
 $(XDIFF_LIB): $(XDIFF_OBJS)
 	$(QUIET_AR)$(RM) $@ && $(AR) $(ARFLAGS) $@ $^
@@ -2541,6 +2531,7 @@ ifndef NO_TCLTK
 	$(MAKE) -C gitk-git clean
 	$(MAKE) -C git-gui clean
 endif
+	$(MAKE) -C sha1-cd/sha1collisiondetection clean
 	$(RM) GIT-VERSION-FILE GIT-CFLAGS GIT-LDFLAGS GIT-BUILD-OPTIONS
 	$(RM) GIT-USER-AGENT GIT-PREFIX
 	$(RM) GIT-SCRIPT-DEFINES GIT-PERL-DEFINES GIT-PYTHON-VARS
