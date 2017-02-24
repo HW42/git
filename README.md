@@ -1,3 +1,43 @@
+# Git with SHA1 collision attack mitigation
+
+This is Git with an ad-hoc (read: hacky and not upstreamable as-is) integration
+of the SHA1 collision attack detection from
+<https://github.com/cr-marcstevens/sha1collisiondetection>.
+
+It replaces the SHA1 hash function used by git and aborts if suspicious data is
+hashed.
+
+**EXPERIMENTAL: Use at your own risk!**
+
+## Building
+
+You can build it like vanilla Git. You need to install `libtool` since this is
+used by the `sha1collisiondetection` lib.
+
+Only tested on amd64 Linux (Works probably also on other platforms supported by
+git).
+
+## Checking already clones repos
+
+If you want to check an already cloned repo you can fun an 'fsck'
+
+    git fsck --full
+
+(`--full` might generate problems with old repos, see the manpage)
+
+## BTW
+
+If you use this you want probably also enable more fsck-ing if you don't have
+already
+
+    git config --global transfer.fsckobjects true
+    git config --global fetch.fsckobjects true
+    git config --global receive.fsckobjects true
+
+---
+
+Original Git README:
+
 Git - fast, scalable, distributed revision control system
 =========================================================
 
