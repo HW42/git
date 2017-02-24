@@ -1,0 +1,27 @@
+#!/bin/bash
+
+set -eu
+
+if [ $# -ne 1 ]; then
+        printf 'Usage: gen-archive <tag> > /tmp/out.tar\n'
+        exit 1
+fi
+
+ref="$1"
+
+if ! git tag -v "$ref" &> /dev/null; then
+        printf 'WARNING: ref '\''%s'\'' is not a signed tag\n' "$ref" >&2
+fi
+
+
+tmp=
+trap 'rm -rf "$tmp"' EXIT
+tmp="$(mktemp -d)"
+
+name="git-$ref"
+
+git archive --format=tar "$ref" --prefix="$name/" | tar -C "$tmp" -x
+export tmp name
+git submodule foreach --quiet --recursive 'git archive --format=tar --prefix="$name/$path/" "$sha1" | tar -C "$tmp" -x'
+
+tar -C "$tmp" --numeric-owner --sort=name --owner=0 --group=0 --mode=u=rwX,go=rX --mtime=\@0 --no-acls --no-xattrs -c $name
